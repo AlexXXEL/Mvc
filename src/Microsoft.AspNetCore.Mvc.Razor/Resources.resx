@@ -200,4 +200,7 @@
   <data name="CompiledViewDescriptor_NoData" xml:space="preserve">
     <value>At least one of the '{0}' or '{1}' values must be non-null.</value>
   </data>
+  <data name="ViewsFeatureProvider_MultipleViewsAtSamePath" xml:space="preserve">
+    <value>More than one compiled view found that resolve to the same location:</value>
+  </data>
 </root>

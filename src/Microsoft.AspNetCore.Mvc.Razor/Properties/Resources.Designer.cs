@@ -392,6 +392,20 @@ namespace Microsoft.AspNetCore.Mvc.Razor
         internal static string FormatCompiledViewDescriptor_NoData(object p0, object p1)
             => string.Format(CultureInfo.CurrentCulture, GetString("CompiledViewDescriptor_NoData"), p0, p1);
 
+        /// <summary>
+        /// More than one compiled view found that resolve to the same location:
+        /// </summary>
+        internal static string ViewsFeatureProvider_MultipleViewsAtSamePath
+        {
+            get => GetString("ViewsFeatureProvider_MultipleViewsAtSamePath");
+        }
+
+        /// <summary>
+        /// More than one compiled view found that resolve to the same location:
+        /// </summary>
+        internal static string FormatViewsFeatureProvider_MultipleViewsAtSamePath()
+            => GetString("ViewsFeatureProvider_MultipleViewsAtSamePath");
+
         private static string GetString(string name, params string[] formatterNames)
         {
             var value = _resourceManager.GetString(name);

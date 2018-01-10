@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -488,6 +489,40 @@ namespace Microsoft.AspNetCore.Mvc.FunctionalTests
             // Assert
             Assert.Equal(422, (int)response.StatusCode);
             Assert.Equal("Can't process this!", await response.Content.ReadAsStringAsync());
+        }
+
+        [Fact]
+        public async Task IsEntryPointIsSetForEntryAssembly()
+        {
+            // Act
+            var response = await Client.GetStringAsync("Home/GetAssemblyPartData");
+            var assemblyPartData = JsonConvert.DeserializeObject<IList<AssemblyPartData>>(response);
+
+            // Assert
+            Assert.Collection(
+                assemblyPartData.OrderBy(a => a.Name, StringComparer.Ordinal),
+                part =>
+                {
+                    Assert.Equal("BasicWebSite", part.Name);
+                    Assert.True(part.IsEntryPoint);
+                },
+                part =>
+                {
+                    Assert.Equal("Microsoft.AspNetCore.Mvc.Razor", part.Name);
+                    Assert.False(part.IsEntryPoint);
+                },
+                part =>
+                {
+                    Assert.Equal("Microsoft.AspNetCore.Mvc.TagHelpers", part.Name);
+                    Assert.False(part.IsEntryPoint);
+                });
+        }
+
+        private class AssemblyPartData
+        {
+            public string Name { get; set; }
+
+            public bool IsEntryPoint { get; set; }
         }
     }
 }

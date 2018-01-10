@@ -27,20 +27,37 @@ namespace Microsoft.AspNetCore.Mvc.Razor.Compilation
         /// <inheritdoc />
         public void PopulateFeature(IEnumerable<ApplicationPart> parts, ViewsFeature feature)
         {
-            foreach (var assemblyPart in parts.OfType<AssemblyPart>())
+            var knownItems = new Dictionary<string, (AssemblyPart part, string identifier)>(StringComparer.OrdinalIgnoreCase);
+            foreach (var assemblyPart in parts.OfType<AssemblyPart>().OrderBy(part => part.IsEntryPoint ? 0 : 1))
             {
                 var attributes = GetViewAttributes(assemblyPart);
                 var items = LoadItems(assemblyPart);
 
                 var merged = Merge(items, attributes);
-                foreach (var entry in merged)
+                foreach (var kvp in merged)
                 {
-                    feature.ViewDescriptors.Add(new CompiledViewDescriptor(entry.item, entry.attribute));
+                    var identifier = kvp.Key;
+                    var (item, attribute) = kvp.Value;
+                    if (!knownItems.TryGetValue(identifier, out var existing))
+                    {
+                        feature.ViewDescriptors.Add(new CompiledViewDescriptor(item, attribute));
+                        knownItems.Add(identifier, (assemblyPart, identifier));
+                    }
+                    else if (!existing.part.IsEntryPoint)
+                    {
+                        var exceptionMessage = string.Join(
+                            Environment.NewLine,
+                            Resources.ViewsFeatureProvider_MultipleViewsAtSamePath,
+                            $"{assemblyPart.Name}: {identifier}",
+                            $"{existing.part.Name}: {existing.identifier}");
+
+                        throw new InvalidOperationException(exceptionMessage);
+                    }
                 }
             }
         }
 
-        private ICollection<(RazorCompiledItem item, RazorViewAttribute attribute)> Merge(
+        private Dictionary<string, (RazorCompiledItem item, RazorViewAttribute attribute)> Merge(
             IReadOnlyList<RazorCompiledItem> items,
             IEnumerable<RazorViewAttribute> attributes)
         {
@@ -73,7 +90,7 @@ namespace Microsoft.AspNetCore.Mvc.Razor.Compilation
                 }
             }
 
-            return dictionary.Values;
+            return dictionary;
         }
 
         protected virtual IReadOnlyList<RazorCompiledItem> LoadItems(AssemblyPart assemblyPart)

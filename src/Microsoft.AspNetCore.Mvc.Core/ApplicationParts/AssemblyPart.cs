@@ -10,25 +10,32 @@ using Microsoft.Extensions.DependencyModel;
 namespace Microsoft.AspNetCore.Mvc.ApplicationParts
 {
     /// <summary>
-    /// An <see cref="ApplicationPart"/> backed by an <see cref="Assembly"/>.
+    /// An <see cref="ApplicationPart"/> backed by an <see cref="System.Reflection.Assembly"/>.
     /// </summary>
     public class AssemblyPart :
         ApplicationPart,
         IApplicationPartTypeProvider,
-        ICompilationReferencesProvider
+        ICompilationReferencesProvider,
+        IEntryPointProvider
     {
         /// <summary>
         /// Initializes a new <see cref="AssemblyPart"/> instance.
         /// </summary>
-        /// <param name="assembly"></param>
+        /// <param name="assembly">The backing <see cref="System.Reflection.Assembly"/>.</param>
         public AssemblyPart(Assembly assembly)
+            : this(assembly, isEntryPoint: false)
         {
-            if (assembly == null)
-            {
-                throw new ArgumentNullException(nameof(assembly));
-            }
+        }
 
-            Assembly = assembly;
+        /// <summary>
+        /// Initializes a new <see cref="AssemblyPart"/> instance.
+        /// </summary>
+        /// <param name="assembly">The backing <see cref="System.Reflection.Assembly"/>.</param>
+        /// <param name="isEntryPoint">Gets a value that determines if the asseembly is the entry point. <seealso cref="IEntryPointProvider"/>.</param>
+        public AssemblyPart(Assembly assembly, bool isEntryPoint)
+        {
+            Assembly = assembly ?? throw new ArgumentNullException(nameof(assembly));
+            IsEntryPoint = isEntryPoint;
         }
 
         /// <summary>
@@ -43,6 +50,9 @@ namespace Microsoft.AspNetCore.Mvc.ApplicationParts
 
         /// <inheritdoc />
         public IEnumerable<TypeInfo> Types => Assembly.DefinedTypes;
+
+        /// <inheritdoc />
+        public bool IsEntryPoint { get; }
 
         /// <inheritdoc />
         public IEnumerable<string> GetReferencePaths()

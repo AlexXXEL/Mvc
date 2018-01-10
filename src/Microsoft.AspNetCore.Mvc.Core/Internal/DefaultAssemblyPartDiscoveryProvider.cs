@@ -36,8 +36,12 @@ namespace Microsoft.AspNetCore.Mvc.Internal
         {
             var entryAssembly = Assembly.Load(new AssemblyName(entryPointAssemblyName));
             var context = DependencyContext.Load(entryAssembly);
-
-            return GetCandidateAssemblies(entryAssembly, context).Select(p => new AssemblyPart(p));
+            foreach (var assembly in GetCandidateAssemblies(entryAssembly, context))
+            {
+                var isEntryPoint = ReferenceEquals(entryAssembly, assembly);
+                var assemblyPart = new AssemblyPart(assembly, isEntryPoint);
+                yield return assemblyPart;
+            }
         }
 
         internal static IEnumerable<Assembly> GetCandidateAssemblies(Assembly entryAssembly, DependencyContext dependencyContext)
